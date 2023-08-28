@@ -137,7 +137,7 @@ class CompositeDataset(IDataset):
 
 
 class LocalDataset(IDataset):
-    def __init__(self, filepath):
+    def __init__(self, filepath, metadata = {}):
         """Creates a LocalDataset.
 
         Args:
@@ -149,19 +149,43 @@ class LocalDataset(IDataset):
             dir_names = [
                 info.filename for info in zip_cache.infolist() if info.is_dir()
             ]
-            assert len(dir_names) > 0
-            dir_name = dir_names[0]
-            with zip_cache.open(dir_name + "metadata.json") as metadata_file:
-                metadata = json.load(metadata_file)
-                self.load_metadata_from_json(metadata)
-            with zip_cache.open(dir_name + "source", "r") as source_file:
-                source = deque()
-                for line in codecs.iterdecode(source_file, "utf8"):
-                    source.append(line)
-            with zip_cache.open(dir_name + "target", "r") as target_file:
-                target = deque()
-                for line in codecs.iterdecode(target_file, "utf8", errors="ignore"):
-                    target.append(line)
+            if len(dir_names) > 0:
+                dir_name = dir_names[0]
+            else:
+                dir_name = ""
+
+            try:
+                with zip_cache.open(dir_name + "metadata.json") as metadata_file:
+                    metadata = json.load(metadata_file)
+            except KeyError:
+                pass
+            
+            self.load_metadata_from_json(metadata)
+
+            source_names = ["source", "source.txt"]
+            for sn in source_names:
+                try:
+                    with zip_cache.open(dir_name + sn, "r") as source_file:
+                        source = deque()
+                        for line in codecs.iterdecode(source_file, "utf8"):
+                            source.append(line)
+                    break
+                except KeyError:
+                    # Try next
+                    pass
+            
+            target_names = ["target", "target.txt"]
+            for tn in target_names:
+                try:
+                    with zip_cache.open(dir_name + tn, "r") as target_file:
+                        target = deque()
+                        for line in codecs.iterdecode(target_file, "utf8", errors="ignore"):
+                            target.append(line)
+                    break
+                except KeyError:
+                    # Try next
+                    pass
+    
         assert source != None
         assert target != None
         assert len(source) == len(target)
@@ -201,6 +225,7 @@ class NetworkDataset(IDataset):
         Args:
             metadata: A json object from json.load
         """
+        self.metadata = metadata
         self.load_metadata_from_json(metadata)
         self.local_dataset = None
 
@@ -245,7 +270,7 @@ class NetworkDataset(IDataset):
             self.download()
         assert zipfile.is_zipfile(filepath)
         if self.local_dataset == None:
-            self.local_dataset = LocalDataset(filepath)
+            self.local_dataset = LocalDataset(filepath, self.metadata)
         return self.local_dataset.data(length)
 
     def __len__(self):

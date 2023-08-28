@@ -3,6 +3,7 @@ import os
 import random
 import sys
 from functools import partial
+import shutil
 
 import argostrain
 from argostrain.dataset import *
@@ -20,6 +21,9 @@ def prepare_data(source_data, target_data):
 
     VALID_SIZE = 2000
     assert len(source_data) > VALID_SIZE
+
+    if os.path.exists("run/split_data"):
+        shutil.rmtree("run/split_data")
 
     os.mkdir("run/split_data")
 

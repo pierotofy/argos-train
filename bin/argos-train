@@ -1,19 +1,34 @@
 #!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import argostrain
 from argostrain import train
+from argostrain.sources import get_source
+import argparse
 
-from_code = input("From code (ISO 639): ")
-to_code = input("To code (ISO 639): ")
-from_name = input("From name: ")
-to_name = input("To name: ")
-version = input("Version: ")
-package_version = version
+parser = argparse.ArgumentParser(description='Train language models')
+parser.add_argument('--from_code',
+    type=str,
+    default="en",
+    help='Source language code. Default: %(default)s')
+parser.add_argument('--to_code',
+    type=str,
+    default="it",
+    help='Target language code. Default: %(default)s')
+parser.add_argument('--version',
+    type=str,
+    default="1.0",
+    help='Model version. Default: %(default)s')
+args = parser.parse_args()
 argos_version = "1.5"
 
-# If data_exists=False then data is downloaded, otherwise it's assumed to
-# be in settings.SOURCE_PATH and settings.TARGET_PATH
-data_exists = False
+try:
+    source = get_source(args.from_code, args.to_code)
+except Exception as e:
+    print(str(e))
+    exit(1)
 
-train.train(from_code, to_code, from_name, to_name, version, package_version, argos_version, data_exists)
+train.train(source, args.version, args.version, argos_version)
 

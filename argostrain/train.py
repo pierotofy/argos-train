@@ -12,115 +12,55 @@ import argostrain
 import argostrain.opennmtutils
 from argostrain import data, settings
 from argostrain.dataset import *
-
+from argostrain.sources import get_network_dataset
 
 def train(
-    from_code,
-    to_code,
-    from_name,
-    to_name,
+    source,
     version,
     package_version,
     argos_version,
-    data_exists,
 ):
+    from_code = source['from_code']
+    to_code = source['to_code'], 
+    from_name = source['from_name']
+    to_name = source['to_name']
+    data = source['data']
+
     settings.RUN_PATH.mkdir(exist_ok=True)
     settings.CACHE_PATH.mkdir(exist_ok=True)
-
-    MAX_DATA_SIZE = 5 * (10 ** 7)
 
     # Check for existing checkpoints
     checkpoints = argostrain.opennmtutils.get_checkpoints()
     if len(checkpoints) > 0:
         input("Warning: Checkpoints exist (enter to continue)")
 
-    if not data_exists:
-        # Delete training data if it exists
-        if settings.SOURCE_PATH.exists() or settings.TARGET_PATH.exists():
-            print("Data already exists and will be deleted if you continue")
-            input("Press enter to continue (Ctrl-C to cancel)")
-            settings.SOURCE_PATH.unlink(missing_ok=True)
-            settings.TARGET_PATH.unlink(missing_ok=True)
+    # Delete training data if it exists
+    if settings.SOURCE_PATH.exists() or settings.TARGET_PATH.exists():
+        print("Data already exists and will be deleted")
+        settings.SOURCE_PATH.unlink(missing_ok=True)
+        settings.TARGET_PATH.unlink(missing_ok=True)
 
-        available_datasets = get_available_datasets()
+        
+    assert len(data) > 0
 
-        from_and_to_codes = [from_code, to_code]
-        available_datasets = list(
-            filter(
-                lambda x: x.from_code in from_and_to_codes
-                and x.to_code in from_and_to_codes,
-                available_datasets,
-            )
-        )
+    # Download and write data source and target
+    while len(data) > 0:
+        dataset = get_network_dataset(source, data.pop())
+        print(str(dataset))
+        source, target = dataset.data()
 
-        # Limit max amount of data used
-        limited_datasets = list()
-        limited_datasets_size = 0
-        available_datasets.sort(key=lambda x: x.size)
-        for dataset in available_datasets:
-            if limited_datasets_size + dataset.size < MAX_DATA_SIZE:
-                limited_datasets.append(dataset)
-                limited_datasets_size += dataset.size
-            else:
-                print(f"Excluding data {str(dataset)}, over MAX_DATA_SIZE")
-        available_datasets = limited_datasets
+        with open(settings.SOURCE_PATH, "a") as s:
+            s.writelines(source)
 
-        datasets = list(
-            filter(
-                lambda x: x.from_code == from_code and x.to_code == to_code,
-                available_datasets,
-            )
-        )
+        with open(settings.TARGET_PATH, "a") as t:
+            t.writelines(target)
 
-        # Try to use reverse data
-        reverse_datasets = list(
-            filter(
-                lambda x: x.to_code == from_code and x.from_code == to_code,
-                available_datasets,
-            )
-        )
+        del dataset
 
-        for reverse_dataset in reverse_datasets:
-            reverse_dataset_data = reverse_dataset.data()
-            dataset = Dataset(reverse_dataset_data[1], reverse_dataset_data[0])
-
-            # Hack to preserve reference metadata
-            dataset.reference = reverse_dataset.reference
-            dataset.size = reverse_dataset.size
-
-            datasets.append(dataset)
-
-        if len(datasets) == 0:
-            print(
-                f"No data available for this language pair ({from_code}-{to_code}), check data-index.json"
-            )
-            sys.exit(1)
-        assert len(datasets) > 0
-
-        # Download and write data source and target
-        while len(datasets) > 0:
-            dataset = datasets.pop()
-            print(str(dataset))
-            source, target = dataset.data()
-
-            with open(settings.SOURCE_PATH, "a") as s:
-                s.writelines(source)
-
-            with open(settings.TARGET_PATH, "a") as t:
-                t.writelines(target)
-
-            del dataset
-
-        # Generate README.md
-        # This is broken somehow, the template is written but the credits are not added
-        # Maybe there's an issue with an end of file token in the template?
-        readme = f"# {from_name}-{to_name}"
-        with open(Path("MODEL_README.md")) as readme_template:
-            readme += "".join(readme_template.readlines())
-            for dataset in datasets:
-                readme += dataset.reference + "\n\n"
-        with open(settings.RUN_PATH / "README.md", "w") as readme_file:
-            readme_file.write(readme)
+    # Generate README.md
+    readme = f"# {from_name}-{to_name}"
+    with open(settings.RUN_PATH / "README.md", "w") as readme_file:
+        readme_file.write(readme)
 
     # Generate metadata.json
     metadata = {
