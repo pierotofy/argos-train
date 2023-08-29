@@ -8,14 +8,14 @@ sudo -E apt-get install python3 python3-pip python3-virtualenv zip git wget curl
 # Setup Python environment
 python3 -m virtualenv --python=python3 ~/env
 #git clone https://github.com/argosopentech/argos-train.git --depth 1 ~/argos-train
-~/env/bin/pip install -e ~/argos-train
+~/env/bin/pip install --no-cache-dir -e ~/argos-train
 echo "source ~/env/bin/activate" >> ~/.profile
 
 # Install OpenNMT-py
 git clone -b v2.3.0 https://github.com/OpenNMT/OpenNMT-py.git --depth 1 ~/OpenNMT-py
 # git clone https://github.com/argosopentech/OpenNMT-py.git --depth 1 ~/OpenNMT-py
-~/env/bin/pip install -e ~/OpenNMT-py
-~/env/bin/pip install -r ~/OpenNMT-py/requirements.opt.txt
+~/env/bin/pip install --no-cache-dir -e ~/OpenNMT-py
+~/env/bin/pip install --no-cache-dir -r ~/OpenNMT-py/requirements.opt.txt
 
 # Compile SentencePiece
 cd
@@ -32,7 +32,9 @@ sudo ldconfig -v
 # Setup .bashrc
 rm ~/.profile
 mv ~/argos-train/profile.sh ~/.profile
-source ~/.profile
-source ~/env/bin/activate
+. ~/.profile
+. ~/env/bin/activate
 cd ~/argos-train
 
+sudo apt-get clean
+sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
