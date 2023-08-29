@@ -44,9 +44,9 @@ skip_empty_level: silent
 
 # General opts
 save_model: run/openmt.model
-save_checkpoint_steps: 1000
-valid_steps: 5000
-train_steps: 50000
+save_checkpoint_steps: 25
+valid_steps: 50
+train_steps: 500
 early_stopping: 4
 
 # Batching
@@ -55,8 +55,8 @@ bucket_size: 262144
 world_size: 1
 gpu_ranks: [0]
 batch_type: "tokens"
-batch_size: 8192
-valid_batch_size: 4096
+batch_size: 512
+valid_batch_size: 256
 max_generator_batches: 2
 accum_count: [4]
 accum_steps: [0]

@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -21,18 +22,14 @@ def train(
     argos_version,
 ):
     from_code = source['from_code']
-    to_code = source['to_code'], 
+    to_code = source['to_code']
     from_name = source['from_name']
     to_name = source['to_name']
     data = source['data']
 
+
     settings.RUN_PATH.mkdir(exist_ok=True)
     settings.CACHE_PATH.mkdir(exist_ok=True)
-
-    # Check for existing checkpoints
-    checkpoints = argostrain.opennmtutils.get_checkpoints()
-    if len(checkpoints) > 0:
-        input("Warning: Checkpoints exist (enter to continue)")
 
     # Delete training data if it exists
     if settings.SOURCE_PATH.exists() or settings.TARGET_PATH.exists():
@@ -99,6 +96,9 @@ def train(
     )
 
     subprocess.run(["rm", "run/split_data/all.txt"])
+
+    if os.path.exists("run/opennmt_data"):
+        shutil.rmtree("run/opennmt_data")
 
     subprocess.run(["onmt_build_vocab", "-config", "config.yml", "-n_sample", "-1"])
 
