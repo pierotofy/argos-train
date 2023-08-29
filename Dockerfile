@@ -10,12 +10,11 @@ RUN passwd -d argosopentech
 RUN echo "argosopentech ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/argosopentech
 RUN usermod -aG sudo argosopentech
 
-ADD . / /home/argosopentech/argos-train
+ADD . / /home/argosopentech/argos-train/
 RUN chown -R argosopentech:argosopentech /home/argosopentech/argos-train
 USER argosopentech
-RUN /home/argosopentech/bin/argos-train-init
-
 WORKDIR /home/argosopentech/argos-train
+RUN chmod +x /home/argosopentech/argos-train/bin/* && /home/argosopentech/argos-train/bin/argos-train-init
 
 ENTRYPOINT ["/bin/bash"]
 

@@ -30,7 +30,8 @@ sudo make install
 sudo ldconfig -v
 
 # Setup .bashrc
-ln -s ~/argos-train/profile.sh ~/.profile
+rm ~/.profile
+mv ~/argos-train/profile.sh ~/.profile
 source ~/.profile
 source ~/env/bin/activate
 cd ~/argos-train
