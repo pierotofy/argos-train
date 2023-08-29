@@ -44,13 +44,13 @@ def train(
     while len(data) > 0:
         dataset = get_network_dataset(source, data.pop())
         print(str(dataset))
-        source, target = dataset.data()
+        src, tgt = dataset.data()
 
         with open(settings.SOURCE_PATH, "a") as s:
-            s.writelines(source)
+            s.writelines(src)
 
         with open(settings.TARGET_PATH, "a") as t:
-            t.writelines(target)
+            t.writelines(tgt)
 
         del dataset
 
