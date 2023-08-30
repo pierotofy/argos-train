@@ -1,9 +1,10 @@
 import argparse
 import os
-import random
+from random import shuffle
 import sys
 from functools import partial
 import shutil
+import math
 
 import argostrain
 from argostrain.dataset import *
@@ -19,8 +20,14 @@ def prepare_data(source_data, target_data):
     source_data = list(source_data)
     target_data = list(target_data)
 
-    VALID_SIZE = 2000
-    assert len(source_data) > VALID_SIZE
+    assert len(source_data) > 5000
+    assert len(source_data) == len(target_data)
+
+    VALID_SIZE = 5000 #int(math.floor(len(source_data) * 0.1))
+
+    combined = list(zip(source_data, target_data))
+    shuffle(combined)
+    source_data, target_data = zip(*combined)
 
     if os.path.exists("run/split_data"):
         shutil.rmtree("run/split_data")

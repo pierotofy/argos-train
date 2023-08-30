@@ -89,7 +89,7 @@ def train(
             "--input=run/split_data/all.txt",
             "--model_prefix=run/sentencepiece",
             "--vocab_size=50000",
-            "--character_coverage=0.9995",
+            "--character_coverage=1.0", # for small character set, 0.9995 for Japanese/Chinese
             "--input_sentence_size=1000000",
             "--shuffle_input_sentence=true",
         ]
